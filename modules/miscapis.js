@@ -203,7 +203,8 @@ function GM_Resources(script){
 }
 
 GM_Resources.prototype.getResourceURL = function(aScript, name) {
-  return ['greasemonkey-script:', aScript.uuid, '/', name].join('');
+  var encodedName = encodeURIComponent(name);
+  return ['greasemonkey-script:', aScript.uuid, '/', encodedName].join('');
 };
 
 GM_Resources.prototype.getResourceText = function(name) {

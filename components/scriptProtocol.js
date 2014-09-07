@@ -71,7 +71,11 @@ ScriptProtocol.prototype.newURI = function(aSpec, aCharset, aBaseUri) {
 
 // nsIProtocolHandler
 ScriptProtocol.prototype.newChannel = function(aUri) {
-  var m = aUri.spec.match(/greasemonkey-script:([-0-9a-f]+)\/(.*)/);
+  // The URI is in the following format:
+  //     greasemonkey-script:<scriptUuid>/<encodedResourceName>
+  // The location's hash ("ref") has to be ignored, as it may contain data we
+  // don't control for certain URIs (e.g. the image size for favicons, #1955).
+  var m = aUri.specIgnoringRef.match(/greasemonkey-script:([-0-9a-f]+)\/(.*)/);
 
   // Incomplete URI, send a 404.
   if (!m) return new DummyChannel(aUri);
@@ -81,8 +85,9 @@ ScriptProtocol.prototype.newChannel = function(aUri) {
   })[0];
 
   if (script) {
+    var name = decodeURIComponent(m[2]);
     for (var i = 0, resource = null; resource = script.resources[i]; i++) {
-      if (resource.name == m[2]) {
+      if (resource.name == name) {
         return ioService.newChannelFromURI(
             GM_util.getUriFromFile(resource.file));
       }
