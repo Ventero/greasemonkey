@@ -46,8 +46,6 @@ GM_BrowserUI.chromeLoad = function(e) {
 
   var sidebar = document.getElementById("sidebar");
   var svc = GM_util.getService();
-  sidebar.addEventListener(
-      "DOMContentLoaded", GM_util.hitch(svc, svc.contentLoad), true);
   sidebar.addEventListener("pagehide", GM_BrowserUI.pagehide, true);
   sidebar.addEventListener("pageshow", GM_BrowserUI.pageshow, true);
 
@@ -56,10 +54,6 @@ GM_BrowserUI.chromeLoad = function(e) {
         var safeWin = aEvent.target.defaultView;
         var href = safeWin.location.href;
         GM_BrowserUI.checkDisabledScriptNavigation(aEvent, safeWin, href);
-        if (0 == href.indexOf('about:blank')) {
-          // #1696: document-element-inserted doesn't see about:blank
-          svc.contentLoad(aEvent);
-        }
       }, true);
 
   document.getElementById("contentAreaContextMenu")
