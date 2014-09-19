@@ -5,6 +5,7 @@ Cu.import('resource://gre/modules/Services.jsm');
 Cu.import('resource://greasemonkey/GM_setClipboard.js');
 Cu.import('resource://greasemonkey/miscapis.js');
 Cu.import('resource://greasemonkey/util.js');
+Cu.import("resource://greasemonkey/xmlhttprequester.js");
 
 // Only a particular set of strings are allowed.  See: http://goo.gl/ex2LJ
 var gMaxJSVersion = "ECMAv5";
@@ -101,12 +102,13 @@ function createSandbox(aScript, aContentWin) {
   //       null, GM_openInTab, aContentWin);
   // }
 
-  // TODO: requires chrome window
-  // if (GM_util.inArray(aScript.grants, 'GM_xmlhttpRequest')) {
-  //   sandbox.GM_xmlhttpRequest = GM_util.hitch(
-  //       new GM_xmlhttpRequester(aContentWin, aChromeWin, aUrl, sandbox),
-  //       'contentStartRequest');
-  // }
+  if (GM_util.inArray(aScript.grants, 'GM_xmlhttpRequest')) {
+    sandbox.GM_xmlhttpRequest = GM_util.hitch(
+        new GM_xmlhttpRequester(aContentWin,
+          // TODO: documentURI or location.href? or check dynamically in xhr?
+          aContentWin.document.documentURI, sandbox),
+        'contentStartRequest');
+  }
 
   Components.utils.evalInSandbox(
       'const GM_info = ' + uneval(aScript.info()), sandbox);
