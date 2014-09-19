@@ -186,7 +186,8 @@ var observer = {
   },
 
   runScripts: function(aRunWhen, aWrappedContentWin) {
-    if (!GM_util.isGreasemonkeyable(aWrappedContentWin.document.documentURI))
+    var url = aWrappedContentWin.document.documentURI
+    if (!GM_util.isGreasemonkeyable(url))
       return;
 
     // TODO: probably remove, or move to isGreasemonkeyable or something
@@ -199,7 +200,7 @@ var observer = {
     this.windowId = GM_util.windowId(aWrappedContentWin);
 
     sendAsyncMessage('greasemonkey:run-scripts', {
-      'url': aWrappedContentWin.document.documentURI,
+      'url': url,
       'when': aRunWhen,
       'windowId': this.windowId
     });
