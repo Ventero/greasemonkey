@@ -231,6 +231,7 @@ service.prototype.runScripts = function(aMessage) {
   // But the content can call replacestate() much later, too.  The only way to
   // be consistent is to ignore it.  Luckily, the  document.documentURI does
   // _not_ change, so always use it when deciding whether to run scripts.
+  var browser = aMessage.target;
   var url = aMessage.data.url;
   var when = aMessage.data.when;
   var windowId = aMessage.data.windowId;
@@ -242,7 +243,7 @@ service.prototype.runScripts = function(aMessage) {
   url = url.replace(gStripUserPassRegexp, '$1');
 
   if (GM_prefRoot.getValue('enableScriptRefreshing')) {
-    this.config.updateModifiedScripts(when, url, windowId);
+    this.config.updateModifiedScripts(when, url, browser, windowId);
   }
 
   var scripts = this.config.getMatchingScripts(function(script) {
@@ -256,7 +257,7 @@ service.prototype.runScripts = function(aMessage) {
   });
 
   if (scripts.length > 0) {
-    this.messageManager.broadcastAsyncMessage("greasemonkey:inject-scripts",
+    browser.messageManager.sendAsyncMessage("greasemonkey:inject-scripts",
       { windowId: windowId },
       { scripts: scripts });
   }

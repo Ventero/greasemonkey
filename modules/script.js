@@ -583,7 +583,7 @@ Script.prototype.isRemoteUpdateAllowed = function(aForced) {
   }
 };
 
-Script.prototype.updateFromNewScript = function(newScript, url, windowId) {
+Script.prototype.updateFromNewScript = function(newScript, url, browser, windowId) {
   // Keep a _copy_ of the old script ID, so we can eventually pass it up
   // to the Add-ons manager UI, to update this script's old entry.
   var oldScriptId = '' + this.id;
@@ -637,6 +637,7 @@ Script.prototype.updateFromNewScript = function(newScript, url, windowId) {
       this.pendingExec.push('document-start update');
     } else {
       if (windowId) this.pendingExec.push({
+        'target': browser,
         'url': url,
         'windowId': windowId
       });
@@ -710,8 +711,7 @@ Script.prototype.updateFromNewScript = function(newScript, url, windowId) {
         var shouldRun = GM_util.scriptMatchesUrlAndRuns(this, pendingExec.url,
           this.runAt);
         if (shouldRun) {
-          // TODO: broadcast to all windows?
-          GM_util.getService().messageManager.broadcastAsyncMessage(
+          pendingExec.target.messageManager.sendAsyncMessage(
             "greasemonkey:inject-scripts",
             { windowId: pendingExec.windowId },
             { scripts: [this] });
