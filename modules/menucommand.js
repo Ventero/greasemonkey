@@ -8,15 +8,6 @@ var Cc = Components.classes;
 var Ci = Components.interfaces;
 var Cu = Components.utils;
 
-
-// Frame scope: Pass "list menu commands" message into sandbox as event.
-function MenuCommandListRequest(aContent, aMessage) {
-  var e = new aContent.CustomEvent(
-      'greasemonkey-menu-command-list', {'detail': aMessage.data.cookie});
-  aContent.dispatchEvent(e);
-}
-
-
 // Callback from script scope, pass "list menu commands" response up to
 // parent process as a message.
 function MenuCommandRespond(aCookie, aData) {
@@ -27,38 +18,15 @@ function MenuCommandRespond(aCookie, aData) {
       {'commands': aData, 'cookie': aCookie});
 }
 
-
-// Frame scope: Respond to the "run this menu command" message coming
-// from the parent, pass it into the sandbox.
-function MenuCommandRun(aContent, aMessage) {
-  var e = new aContent.CustomEvent(
-      'greasemonkey-menu-command-run', {'detail': aMessage.data.cookie});
-  aContent.dispatchEvent(e);
-}
-
-
 // This function is injected into the sandbox, in a private scope wrapper, BY
 // SOURCE.  Data and sensitive references are wrapped up inside its closure.
 function MenuCommandSandbox(
-    aScriptId, aScriptName, aCommandResponder, aFrameScope,
+    aScriptId, aScriptName, aCommandResponder,
     aInvalidAccesskeyErrorStr) {
   // 1) Internally to this function's private scope, maintain a set of
   // registered menu commands.
   var commands = {};
   var commandCookie = 0;
-  // 2) Respond to requests to list those registered commands.
-  addEventListener('greasemonkey-menu-command-list', function(e) {
-    aCommandResponder(e.detail, commands);
-  }, true);
-  // 3) Respond to requests to run those registered commands.
-  addEventListener('greasemonkey-menu-command-run', function(e) {
-    var command = commands[e.detail];
-    if (!command) {
-      throw new Error('Could not run requested menu command!');
-    } else {
-      command.commandFunc();
-    }
-  }, true);
   // 4) Export the "register a command" API function to the sandbox scope.
   this.GM_registerMenuCommand = function(
       commandName, commandFunc, accessKey, unused, accessKey2) {
@@ -84,4 +52,14 @@ function MenuCommandSandbox(
     };
     commands[command.cookie] = command;
   };
+
+  return function(cmd, detail) {
+    if (cmd == 'greasemonkey:menu-command-list') {
+      aCommandResponder(detail, commands)
+    } else if (cmd == 'greasemonkey:menu-command-run') {
+      var command = commands[detail];
+      if (!command) throw new Error("nope");
+      command.commandFunc.call();
+    }
+  }
 }

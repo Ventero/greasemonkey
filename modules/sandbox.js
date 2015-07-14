@@ -71,11 +71,11 @@ function createSandbox(aScript, aContentWin, aUrl, aFrameScope) {
   }
 
   if (GM_util.inArray(aScript.grants, 'GM_registerMenuCommand')) {
-    Components.utils.evalInSandbox(MenuCommandSandbox.toSource(), sandbox);
-    sandbox.MenuCommandSandbox(
-        aScript.id, aScript.name, MenuCommandRespond, aFrameScope,
+    Components.utils.evalInSandbox("this.MenuCommandSandbox = " + MenuCommandSandbox.toSource(), sandbox);
+    var res = sandbox.MenuCommandSandbox(
+        aScript.id, aScript.name, MenuCommandRespond,
         gInvalidAccesskeyErrorStr);
-    Components.utils.evalInSandbox('delete MenuCommandSandbox;', sandbox);
+    Components.utils.evalInSandbox('delete this.MenuCommandSandbox;', sandbox);
   }
 
   var scriptStorage = new GM_ScriptStorageFront(aScript, aFrameScope, sandbox);
@@ -124,7 +124,7 @@ function createSandbox(aScript, aContentWin, aUrl, aFrameScope) {
   Components.utils.evalInSandbox(
       'const GM_info = ' + uneval(aScript.info()), sandbox);
 
-  return sandbox;
+  return [sandbox, res];
 }
 
 

@@ -120,7 +120,18 @@ function injectScripts(aScripts, aContentWin) {
 
   for (var i = 0, script = null; script = aScripts[i]; i++) {
     if (script.noframes && !winIsTop) continue;
-    var sandbox = createSandbox(script, aContentWin, url, gScope);
+    var ret = createSandbox(script, aContentWin, url, gScope);
+    var sandbox = ret[0];
+    var menuCommander = ret[1];
+
+    if (menuCommander) {
+      function listener(aMessage) {
+        menuCommander(aMessage.name, aMessage.data.cookie);
+      }
+      addMessageListener('greasemonkey:menu-command-list', listener);
+      addMessageListener('greasemonkey:menu-command-run', listener);
+    }
+
     runScriptInSandbox(script, sandbox);
   }
 }
@@ -192,12 +203,6 @@ addEventListener('DOMContentLoaded', blankLoad);
 
 addMessageListener('greasemonkey:inject-delayed-script', injectDelayedScript);
 addMessageListener('greasemonkey:load-failed-script', loadFailedScript);
-addMessageListener('greasemonkey:menu-command-list', function(aMessage) {
-  MenuCommandListRequest(content, aMessage);
-});
-addMessageListener('greasemonkey:menu-command-run', function(aMessage) {
-  MenuCommandRun(content, aMessage);
-});
 
 var contentObserver = new ContentObserver();
 Services.obs.addObserver(contentObserver, 'document-element-inserted', false);
